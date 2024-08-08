@@ -11,39 +11,51 @@ const bookList = document.getElementById('books');
 const bookForm = document.getElementById('bookForm');
 const addEditBookForm = document.getElementById('addEditBookForm');
 
-// Event Listener
-loginBtn.addEventListener('click', () => window.location.href = '/oauth2/authorization/keycloak');
-registerBtn.addEventListener('click', () => window.location.href = 'http://localhost:8081/realms/bookmanager/protocol/openid-connect/registrations?client_id=bookmanager&response_type=code&scope=openid&redirect_uri=http://localhost:8080/');
-logoutBtn.addEventListener('click', logout);
-addEditBookForm.addEventListener('submit', handleBookSubmit);
+loginBtn.onclick= ()=> keycloak.login();
+logoutBtn.onclick= ()=> keycloak.logout();
 
-// Initialisierung
-checkLoginStatus();
-
-// Funktionen
-async function checkLoginStatus() {
-    try {
-        const response = await fetch('/api/user', {
-            headers: {
-                'Authorization': `Bearer ${jwtToken}`
-            }
-        });
-        if (response.ok) {
-            currentUser = await response.text();
-            // Extrahiere das JWT-Token aus der Antwort
-            const authHeader = response.headers.get('Authorization');
-            if (authHeader && authHeader.startsWith('Bearer ')) {
-                jwtToken = authHeader.substring(7);
-            }
-            updateUIForLoggedInUser();
-            fetchBooks();
-        } else {
-            updateUIForLoggedOutUser();
-        }
-    } catch (error) {
-        console.error('Fehler beim Prüfen des Login-Status:', error);
-    }
+const updateButtons = (authenticated)=> {
+    loginBtn.style.display = authenticated ? 'none' : 'inline-block';
+    logoutBtn.style.display = authenticated ? 'inline-block' : 'none';
 }
+
+const keycloak = new Keycloak({
+    url: 'http://localhost:8081/',
+    realm: 'bookmanager',
+    clientId: 'bookmanager'
+});
+
+window.onload=function() {
+    keycloak.init({
+        onLoad: 'check-sso',
+        silentCheckSsoRedirectUri: window.location.origin + 'silent-check-sso.html',
+        pkceMethod: 'S256',
+        checkLoginIframe: false
+    }).then(function (authenticated) {
+        console.log(authenticated ? 'Authenticated' : 'Not authenticated');
+        // updateButtons(authenticated)
+        if(authenticated) {
+            fetchBooks();
+        } 
+    }).catch(function(error) {
+        console.log('Failed to initilaice keycloak', error);
+    })
+}
+
+
+
+setInterval(()=> {
+    keycloak.updateToken(70).then((refreshed)=> {
+        if(refreshed) {
+            console.log('Token is refreshed');
+        } else {
+            console.log('Token is already valid');
+        }
+    }).catch (()=> {
+        console.error('Failed to refresh Token');
+    }) 
+}, 60000);
+
 
 function updateUIForLoggedInUser() {
     loginBtn.style.display = 'none';
@@ -58,22 +70,6 @@ function updateUIForLoggedOutUser() {
     logoutBtn.style.display = 'none';
     bookForm.style.display = 'none';
     bookList.innerHTML = '';
-}
-
-async function logout() {
-    try {
-        await fetch('/logout', {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${jwtToken}`
-            }
-        });
-        jwtToken = null;
-        currentUser = null;
-        updateUIForLoggedOutUser();
-    } catch (error) {
-        console.error('Fehler beim Abmelden:', error);
-    }
 }
 
 async function fetchBooks() {
