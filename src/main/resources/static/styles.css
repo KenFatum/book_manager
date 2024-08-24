@@ -22,6 +22,12 @@ main {
     padding: 2rem;
 }
 
+#optionNav {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+}
+
 #bookList, #bookForm {
     margin-bottom: 2rem;
 }

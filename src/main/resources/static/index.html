@@ -9,6 +9,7 @@
 <body>
 <header>
     <h1>Book Manager</h1>
+    <p id="displayUsername"></p>
     <nav>
         <button id="loginBtn">Anmelden</button>
         <button id="registerBtn">Registrieren</button>
@@ -17,6 +18,16 @@
 </header>
 
 <main>
+    <section id="optionForm" style="display: none;">
+        <nav id="optionNav">
+            <button id="editBtn">Bearbeiten</button>
+            <button id="readBtn">Lesen</button>
+            <button id="orderListBtn">Bestell Liste</button>
+            <button id="booksRequestBtn">Bücher Anfrage</button>
+            <button id="editRequestBtn">Anfrage bearebiten</button>
+        </nav>
+    </section>
+
     <section id="bookList">
         <h2>Bücherliste</h2>
         <ul id="books"></ul>
@@ -32,10 +43,12 @@
             <button type="submit">Speichern</button>
         </form>
     </section>
+
+    
 </main>
 
 
-<script src="keycloak.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/keycloak-js@25.0.4/dist/keycloak.min.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
