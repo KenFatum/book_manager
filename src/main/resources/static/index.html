@@ -24,8 +24,23 @@
             <button id="readBtn">Lesen</button>
             <button id="orderListBtn">Bestell Liste</button>
             <button id="booksRequestBtn">Bücher Anfrage</button>
-            <button id="editRequestBtn">Anfrage bearebiten</button>
+            <button id="editRequestBtn">Anfrage bearbeiten</button>
         </nav>
+    </section>
+
+    <div class="search-container" style="display: none;">
+        <input type="text" id="searchInput" placeholder="Suche nach Büchern...">
+        <button id="searchButton">Suchen</button>
+    </div>
+
+    <section id="requestForm" style="display: none;">
+        <h2>Anfrage für neue Bücher</h2>
+        <div id="requestContainer">
+            <input type="text" id="requestTitle" placeholder="Titel" required>
+            <input type="text" id="requestAuthor" placeholder="Autor" required>
+            <input type="text" id="requestIsbn" placeholder="ISBN" required>
+            <textarea id="requestReason" placeholder="Grund für die Anfrage"></textarea>
+        </div>
     </section>
 
     <section id="bookList">

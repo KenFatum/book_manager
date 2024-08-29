@@ -4,231 +4,294 @@ let books = [];
 let jwtToken = null;
 
 // DOM-Elemente
-const loginBtn = document.getElementById('loginBtn');
-const registerBtn = document.getElementById('registerBtn');
-const logoutBtn = document.getElementById('logoutBtn');
-const bookList = document.getElementById('books');
-const bookForm = document.getElementById('bookForm');
-const addEditBookForm = document.getElementById('addEditBookForm');
+const loginBtn = document.getElementById("loginBtn");
+const registerBtn = document.getElementById("registerBtn");
+const logoutBtn = document.getElementById("logoutBtn");
+const bookList = document.getElementById("books");
+const bookForm = document.getElementById("bookForm");
+const addEditBookForm = document.getElementById("addEditBookForm");
 
-const displayUsername = document.getElementById('displayUsername');
+const displayUsername = document.getElementById("displayUsername");
 
-const optionForm = document.getElementById('optionForm');
-const editBtn = document.getElementById('editBtn');
-const readBtn = document.getElementById('readBtn');
-const orderListBtn = document.getElementById('orderListBtn');
-const booksRequestBtn = document.getElementById('booksRequestBtn');
-const editRequestBtn = document.getElementById('editRequestBtn');
+const optionForm = document.getElementById("optionForm");
+const editBtn = document.getElementById("editBtn");
+const readBtn = document.getElementById("readBtn");
+const orderListBtn = document.getElementById("orderListBtn");
+const booksRequestBtn = document.getElementById("booksRequestBtn");
+const editRequestBtn = document.getElementById("editRequestBtn");
 
-const logoutOptions = { redirectUri: "http://127.0.0.1:5500/index.html" }
+const searchForm = document.querySelector(".search-container");
+const searchButton = document.getElementById("searchButton");
 
-loginBtn.onclick= ()=> keycloak.login();
-logoutBtn.onclick= ()=> keycloak.logout(logoutOptions);
-registerBtn.onclick= ()=> keycloak.register();
+const logoutOptions = { redirectUri: "https://127.0.0.1:8443/index.html" };
 
-const updateButtons = (authenticated)=> {
-    loginBtn.style.display = authenticated ? 'none' : 'inline-block';
-    logoutBtn.style.display = authenticated ? 'inline-block' : 'none';
-    registerBtn.style.display = authenticated ? 'none' : 'inline-block';
-}
+loginBtn.onclick = () => keycloak.login();
+logoutBtn.onclick = () => keycloak.logout(logoutOptions);
+registerBtn.onclick = () => keycloak.register();
+addEditBookForm.addEventListener("submit", handleBookSubmit);
+searchButton.addEventListener("click", searchBook);
+
+const updateButtons = (authenticated) => {
+  loginBtn.style.display = authenticated ? "none" : "inline-block";
+  logoutBtn.style.display = authenticated ? "inline-block" : "none";
+  registerBtn.style.display = authenticated ? "none" : "inline-block";
+};
 
 const keycloak = new Keycloak({
-    url: 'http://localhost:8081/',
-    realm: 'bookmanager',
-    clientId: 'bookmanager'
+  url: "http://localhost:8081/",
+  realm: "bookmanager",
+  clientId: "bookmanager",
 });
 
-window.onload=function() {
-    keycloak.init({
-        onLoad: 'check-sso',
-        silentCheckSsoRedirectUri: window.location.origin + 'silent-check-sso.html',
-        pkceMethod: 'S256',
-        checkLoginIframe: false
-    }).then(function (authenticated) {
-        console.log(authenticated ? 'Authenticated' : 'Not authenticated');
-        jwtToken = keycloak.token;
-        //console.log('JWT Token:' + jwtToken);
-        updateButtons(authenticated);
-        if(authenticated) {
-            fetchBooks();
-            showDashboard();
-        } 
-    }).catch(function(error) {
-        console.log('Failed to initilaice keycloak', error);
+window.onload = function () {
+  keycloak
+    .init({
+      onLoad: "check-sso",
+      silentCheckSsoRedirectUri:
+        window.location.origin + "silent-check-sso.html",
+      pkceMethod: "S256",
+      checkLoginIframe: false,
     })
-}
+    .then(function (authenticated) {
+      console.log(authenticated ? "Authenticated" : "Not authenticated");
+      jwtToken = keycloak.token;
+      console.log("JWT Token:" + jwtToken);
+      updateButtons(authenticated);
+      if (authenticated) {
+        showDashboard();
+        fetchBooks();
+      }
+    })
+    .catch(function (error) {
+      console.log("Failed to initilaice keycloak", error);
+    });
+};
 
 function showDashboard() {
-    if (keycloak.tokenParsed) {
-        const userName = keycloak.tokenParsed.preferred_username;
-        const roles = keycloak.realmAccess.roles;
+  if (keycloak.tokenParsed) {
+    const userName = keycloak.tokenParsed.preferred_username;
+    const roles = keycloak.realmAccess.roles;
 
-        optionForm.style.display = 'inline-block';
+    optionForm.style.display = "inline-block";
 
-        console.log('Logged in user: ', userName);
-        console.log('User roles: ', roles);
+    console.log("Logged in user: ", userName);
+    console.log("User roles: ", roles);
 
-        if (roles.includes('bm_admin')) {
-            showAdminDashBoard(userName);
-        } else if (roles.includes('bm_user')) {
-            showUserDashboard(userName);
-        } else {
-            console.log('Hello World!');
-        }
+    if (roles.includes("admin")) {
+      showAdminDashBoard(userName);
+    } else if (roles.includes("user")) {
+      showUserDashboard(userName);
+    } else {
+      console.log("Hello World!");
     }
+  }
 }
 
 function showAdminDashBoard(userName) {
-    displayUsername.innerHTML = `Welcome, Admin ${userName}`;
-    optionsForAdmin();
+  displayUsername.innerHTML = `Welcome, Admin ${userName}`;
+  setAdminPermissions();
 }
 
 function showUserDashboard(userName) {
-    displayUsername.innerHTML = `Welcome, ${userName}`;
-    optionsForUser();
+  displayUsername.innerHTML = `Welcome, ${userName}`;
+  setUserPermissions();
 }
 
-setInterval(()=> {
-    keycloak.updateToken(70).then((refreshed)=> {
-        if(refreshed) {
-            console.log('Token is refreshed');
-        } else {
-            console.log('Token is already valid');
-        }
-    }).catch (()=> {
-        console.error('Failed to refresh Token');
-    }) 
+setInterval(() => {
+  keycloak
+    .updateToken(70)
+    .then((refreshed) => {
+      if (refreshed) {
+        console.log("Token is refreshed");
+      } else {
+        console.log("Token is already valid");
+      }
+    })
+    .catch(() => {
+      console.error("Failed to refresh Token");
+    });
 }, 60000);
 
+function setAdminPermissions() {
+  editBtn.style.display = "inline";
+  readBtn.style.display = "inline";
+  orderListBtn.style.display = "inline";
+  booksRequestBtn.style.display = "inline";
+  editRequestBtn.style.display = "inline";
+  bookForm.style.display = "none";
+}
 
-function optionsForAdmin() {
-    editBtn.style.display = 'inline';
-    readBtn.style.display = 'inline';
-    orderListBtn.style.display = 'inline';
-    booksRequestBtn.style.display = 'inline';
-    editRequestBtn.style.display = 'inline';
-    bookForm.style.display = 'none';
-
+function setUserPermissions() {
+  editBtn.style.display = "none";
+  readBtn.style.display = "inline";
+  orderListBtn.style.display = "none";
+  booksRequestBtn.style.display = "inline";
+  editRequestBtn.style.display = "none";
+  bookList.innerHTML = "";
 }
 
 editBtn.onclick = () => {
-    if (bookForm.style.display === 'none' || bookForm.style.display === '') {
-        bookForm.style.display = 'block';
-    } else {
-        bookForm.style.display = 'none';
-    }
-}
+  if (bookForm.style.display === "none" || bookForm.style.display === "") {
+    bookForm.style.display = "block";
+  } else {
+    bookForm.style.display = "none";
+  }
+};
 
-function optionsForUser() {
-    editBtn.style.display = 'none';
-    readBtn.style.display = 'inline';
-    orderListBtn.style.display = 'none';
-    booksRequestBtn.style.display = 'inline';
-    editRequestBtn.style.display = 'none';
-    bookList.innerHTML = '';
-}
+readBtn.onclick = () => {
+  if (searchForm.style.display === "none" || searchForm.style.display === "") {
+    searchForm.style.display = "block";
+  } else {
+    searchForm.style.display = "none";
+  }
+};
 
 async function fetchBooks() {
-    try {
-        const response = await fetch('http://localhost:8080/api/books', {
-            headers: {
-                'Authorization': `Bearer ${jwtToken}`
-            }
-        });
-        books = await response.json();
-        renderBooks();
-    } catch (error) {
-        console.error('Fehler beim Abrufen der Bücher:', error);
-        console.log(books);
+  try {
+    const response = await fetch("https://localhost:8443/api/books", {
+      headers: {
+        Authorization: `Bearer ${jwtToken}`,
+      },
+    });
+    books = await response.json();
+    console.log("Das sind die Bücher: ", books);
+    renderBooks();
+  } catch (error) {
+    console.error("Fehler beim Abrufen der Bücher:", error);
+    console.log(books);
+  }
+}
+
+function searchBook() {
+  const searchTerm = document
+    .getElementById("searchInput")
+    .value.trim()
+    .toLowerCase();
+
+  // Bücherliste leeren
+  bookList.innerHTML = "";
+
+  let foundBooks = false;
+
+  books.forEach((book) => {
+    if (
+      book.title.toLowerCase().includes(searchTerm) ||
+      book.author.toLowerCase().includes(searchTerm)
+    ) {
+      // Wenn ein Buch gefunden wurde, zeige es an
+      const li = document.createElement("li");
+       li.innerHTML = `
+           ${book.title} von ${book.author} (ISBN: ${book.isbn})
+           <div>
+               ${keycloak.hasRealmRole('admin') ? `
+                   <button onclick="editBook(${book.id})">Bearbeiten</button>
+                   <button onclick="deleteBook(${book.id})">Löschen</button>
+               ` : ''}
+           </div>
+       `;
+      bookList.appendChild(li);
+      foundBooks = true;
     }
+  });
+
+  if (!foundBooks) {
+    // Wenn kein Buch gefunden wurde, zeige eine Nachricht an
+    bookList.innerHTML = "<li>Kein Buch gefunden.</li>";
+  }
 }
 
 function renderBooks() {
-    bookList.innerHTML = '';
-    books.forEach(book => {
-        const li = document.createElement('li');
-        li.innerHTML = `
-            ${book.title} von ${book.author} (ISBN: ${book.isbn})
-            <div>
-                <button onclick="editBook(${book.id})">Bearbeiten</button>
-                <button onclick="deleteBook(${book.id})">Löschen</button>
-            </div>
-        `;
-        bookList.appendChild(li);
-    });
+  bookList.innerHTML = "";
+  books.forEach((book) => {
+    const li = document.createElement("li");
+     li.innerHTML = `
+             ${book.title} von ${book.author} (ISBN: ${book.isbn})
+             <div>
+                 ${
+                   keycloak.hasRealmRole("admin")
+                     ? `
+                     <button onclick="editBook(${book.id})">Bearbeiten</button>
+                     <button onclick="deleteBook(${book.id})">Löschen</button>
+                 `
+                     : ""
+                 }
+             </div>
+     `;
+      bookList.appendChild(li);
+  });
 }
 
 async function handleBookSubmit(e) {
-    e.preventDefault();
-    const bookData = {
-        title: document.getElementById('title').value,
-        author: document.getElementById('author').value,
-        isbn: document.getElementById('isbn').value
-    };
-    const bookId = document.getElementById('bookId').value;
+  e.preventDefault();
+  const bookData = {
+    title: document.getElementById("title").value,
+    author: document.getElementById("author").value,
+    isbn: document.getElementById("isbn").value,
+  };
+  const bookId = document.getElementById("bookId").value;
 
-    try {
-        if (bookId) {
-            await updateBook(bookId, bookData);
-        } else {
-            await createBook(bookData);
-        }
-        resetForm();
-        fetchBooks();
-    } catch (error) {
-        console.error('Fehler beim Speichern des Buches:', error);
+  try {
+    if (bookId) {
+      await updateBook(bookId, bookData);
+    } else {
+      await createBook(bookData);
     }
+    resetForm();
+    fetchBooks();
+  } catch (error) {
+    console.error("Fehler beim Speichern des Buches:", error);
+  }
 }
 
 async function createBook(bookData) {
-    await fetch('http://localhost:8080/api/books', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${jwtToken}`
-        },
-        body: JSON.stringify(bookData)
-    });
+  await fetch("https://localhost:8443/api/books", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${jwtToken}`,
+    },
+    body: JSON.stringify(bookData),
+  });
 }
 
 async function updateBook(id, bookData) {
-    await fetch(`http://localhost:8080/api/books/${id}`, {
-        method: 'PUT',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${jwtToken}`
-        },
-        body: JSON.stringify(bookData)
-    });
+  await fetch(`https://localhost:8443/api/books/${id}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${jwtToken}`,
+    },
+    body: JSON.stringify(bookData),
+  });
 }
 
 function editBook(id) {
-    const book = books.find(b => b.id === id);
-    if (book) {
-        document.getElementById('bookId').value = book.id;
-        document.getElementById('title').value = book.title;
-        document.getElementById('author').value = book.author;
-        document.getElementById('isbn').value = book.isbn;
-    }
+  const book = books.find((b) => b.id === id);
+  if (book) {
+    document.getElementById("bookId").value = book.id;
+    document.getElementById("title").value = book.title;
+    document.getElementById("author").value = book.author;
+    document.getElementById("isbn").value = book.isbn;
+  }
 }
 
 async function deleteBook(id) {
-    if (confirm('Sind Sie sicher, dass Sie dieses Buch löschen möchten?')) {
-        try {
-            await fetch(`http://localhost:8080/api/books/${id}`, {
-                method: 'DELETE',
-                headers: {
-                    'Authorization': `Bearer ${jwtToken}`
-                }
-            });
-            fetchBooks();
-        } catch (error) {
-            console.error('Fehler beim Löschen des Buches:', error);
-        }
+  if (confirm("Sind Sie sicher, dass Sie dieses Buch löschen möchten?")) {
+    try {
+      await fetch(`https://localhost:8443/api/books/${id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${jwtToken}`,
+        },
+      });
+      fetchBooks();
+    } catch (error) {
+      console.error("Fehler beim Löschen des Buches:", error);
     }
+  }
 }
 
 function resetForm() {
-    document.getElementById('bookId').value = '';
-    addEditBookForm.reset();
+  document.getElementById("bookId").value = "";
+  addEditBookForm.reset();
 }
