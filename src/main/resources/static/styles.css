@@ -98,3 +98,21 @@ li {
     display: flex;
     justify-content: space-between;
 }
+
+/* requestForm */
+#requestContainer {
+    display: flex;
+    flex-direction: column;
+    max-width: 500px;
+    justify-content: space-between;
+}
+
+#requestContainer textarea {
+    max-width: 500px;
+    height: 130px;
+    resize: none;
+}
+
+#requestContainer button {
+    margin-top: 10px;
+}

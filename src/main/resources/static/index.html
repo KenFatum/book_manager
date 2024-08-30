@@ -39,11 +39,12 @@
             <input type="text" id="requestTitle" placeholder="Titel" required>
             <input type="text" id="requestAuthor" placeholder="Autor" required>
             <input type="text" id="requestIsbn" placeholder="ISBN" required>
-            <textarea id="requestReason" placeholder="Grund für die Anfrage"></textarea>
+            <textarea id="requestReason" maxlength="500" placeholder="Grund für die Anfrage"></textarea>
+            <button type="submit">Senden</button>
         </div>
     </section>
 
-    <section id="bookList">
+    <section id="bookList" style="display: none;">
         <h2>Bücherliste</h2>
         <ul id="books"></ul>
     </section>
@@ -63,7 +64,8 @@
 </main>
 
 
-<script src="https://cdn.jsdelivr.net/npm/keycloak-js@25.0.4/dist/keycloak.min.js"></script>
+<!--<script src="https://cdn.jsdelivr.net/npm/keycloak-js@25.0.4/dist/keycloak.min.js"></script>-->
+<script src="/keycloak.min.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

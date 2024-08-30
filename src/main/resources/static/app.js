@@ -7,6 +7,7 @@ let jwtToken = null;
 const loginBtn = document.getElementById("loginBtn");
 const registerBtn = document.getElementById("registerBtn");
 const logoutBtn = document.getElementById("logoutBtn");
+const bookContainer = document.getElementById("bookList");
 const bookList = document.getElementById("books");
 const bookForm = document.getElementById("bookForm");
 const addEditBookForm = document.getElementById("addEditBookForm");
@@ -22,6 +23,8 @@ const editRequestBtn = document.getElementById("editRequestBtn");
 
 const searchForm = document.querySelector(".search-container");
 const searchButton = document.getElementById("searchButton");
+
+const requestForm = document.getElementById("requestForm");
 
 const logoutOptions = { redirectUri: "https://127.0.0.1:8443/index.html" };
 
@@ -44,6 +47,7 @@ const keycloak = new Keycloak({
 });
 
 window.onload = function () {
+  toggleBookList(false);
   keycloak
     .init({
       onLoad: "check-sso",
@@ -54,18 +58,24 @@ window.onload = function () {
     })
     .then(function (authenticated) {
       console.log(authenticated ? "Authenticated" : "Not authenticated");
-      jwtToken = keycloak.token;
-      console.log("JWT Token:" + jwtToken);
       updateButtons(authenticated);
       if (authenticated) {
+        jwtToken = keycloak.token;
+        console.log("JWT Token:" + jwtToken);
         showDashboard();
         fetchBooks();
+        toggleBookList(true);
       }
     })
     .catch(function (error) {
       console.log("Failed to initilaice keycloak", error);
     });
 };
+
+function toggleBookList(show) {
+  bookContainer.style.display = show ? "block" : "none";
+}
+
 
 function showDashboard() {
   if (keycloak.tokenParsed) {
@@ -82,7 +92,7 @@ function showDashboard() {
     } else if (roles.includes("user")) {
       showUserDashboard(userName);
     } else {
-      console.log("Hello World!");
+      console.log("User has no specific role");
     }
   }
 }
@@ -146,7 +156,21 @@ readBtn.onclick = () => {
   }
 };
 
+booksRequestBtn.onclick = () => {
+  if (requestForm.style.display === "none" || requestForm.style.display === "") {
+    requestForm.style.display = "block";
+    bookContainer.style.display = "none";
+  } else {
+    requestForm.style.display = "none";
+    bookContainer.style.display = "block";
+  }
+}
+
 async function fetchBooks() {
+  if (!keycloak.authenticated) {
+    console.log("User is not authenticated. Cannot fetch books.");
+    return;
+  }
   try {
     const response = await fetch("https://localhost:8443/api/books", {
       headers: {
@@ -156,9 +180,11 @@ async function fetchBooks() {
     books = await response.json();
     console.log("Das sind die Bücher: ", books);
     renderBooks();
+    toggleBookList(true);
   } catch (error) {
     console.error("Fehler beim Abrufen der Bücher:", error);
     console.log(books);
+    toggleBookList(false);
   }
 }
 
