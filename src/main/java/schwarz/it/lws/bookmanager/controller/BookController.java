@@ -1,6 +1,8 @@
 package schwarz.it.lws.bookmanager.controller;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import schwarz.it.lws.bookmanager.model.Book;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -57,6 +59,36 @@ public class BookController {
                 .map(book -> {
                     bookRepository.delete(book);
                     return ResponseEntity.ok().build();
+                })
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    //REQUEST
+
+    @PostMapping("/request")
+    @PreAuthorize("hasAnyRole('user', 'admin')")
+    public Book requestBook(@RequestBody Book book) {
+        book.setStatus(Book.BookStatus.REQUESTED);
+        return bookRepository.save(book);
+    }
+
+    @GetMapping("/requests")
+    @PreAuthorize("hasRole('admin')")
+    public List<Book> getBookRequests() {
+        return bookRepository.findByStatus(Book.BookStatus.REQUESTED);
+    }
+
+    @PutMapping("/request/{id}")
+    @PreAuthorize("hasRole('admin')")
+    public ResponseEntity<Book> processBookRequest(@PathVariable Long id, @RequestParam String action) {
+        return bookRepository.findById(id)
+                .map(book -> {
+                    if ("accept".equals(action)) {
+                        book.setStatus(Book.BookStatus.ACCEPTED);
+                    } else if ("reject".equals(action)) {
+                        book.setStatus(Book.BookStatus.REJECTED);
+                    }
+                    return ResponseEntity.ok(bookRepository.save(book));
                 })
                 .orElse(ResponseEntity.notFound().build());
     }

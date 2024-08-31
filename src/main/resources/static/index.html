@@ -33,15 +33,21 @@
         <button id="searchButton">Suchen</button>
     </div>
 
+    <section id="editRequestForm" style="display: none;">
+        <h2>Bücher Anfragen</h2>
+        <ul id="editRequestBooks"></ul>
+    </section>
+
     <section id="requestForm" style="display: none;">
         <h2>Anfrage für neue Bücher</h2>
-        <div id="requestContainer">
+        <form id="requestContainer">
+            <input type="hidden" id="requestBookId">
             <input type="text" id="requestTitle" placeholder="Titel" required>
             <input type="text" id="requestAuthor" placeholder="Autor" required>
             <input type="text" id="requestIsbn" placeholder="ISBN" required>
             <textarea id="requestReason" maxlength="500" placeholder="Grund für die Anfrage"></textarea>
             <button type="submit">Senden</button>
-        </div>
+        </form>
     </section>
 
     <section id="bookList" style="display: none;">
