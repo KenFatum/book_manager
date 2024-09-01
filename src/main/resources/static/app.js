@@ -193,13 +193,15 @@ async function fetchBooks() {
                 Authorization: `Bearer ${jwtToken}`,
             },
         });
+        //const allBooks = await response.json();
+        //console.log(allBooks);
+        //books = allBooks.filter(book => book.status === 'AVAILABLE');
         books = await response.json();
-        console.log("Das sind die Bücher: ", books);
+        console.log("Verfügbare Bücher: ", books);
         renderBooks();
         toggleBookList(true);
     } catch (error) {
         console.error("Fehler beim Abrufen der Bücher:", error);
-        console.log(books);
         toggleBookList(false);
     }
 }
@@ -269,6 +271,7 @@ async function handleBookSubmit(e) {
         title: document.getElementById("title").value,
         author: document.getElementById("author").value,
         isbn: document.getElementById("isbn").value,
+        //status: "AVAILABLE",
     };
     const bookId = document.getElementById("bookId").value;
 
@@ -311,6 +314,7 @@ function editBook(id) {
     const book = books.find((b) => b.id === id);
     if (book) {
         document.getElementById("bookId").value = book.id;
+        //document.getElementById("bookStatus").value = "AVAILABLE";
         document.getElementById("title").value = book.title;
         document.getElementById("author").value = book.author;
         document.getElementById("isbn").value = book.isbn;
@@ -340,25 +344,6 @@ function resetForm() {
 
 // REQUEST BOOKS
 
-async function requestBook(bookData) {
-    try {
-        const response = await fetch('https://localhost:8443/api/books/request', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                Authorization: `Bearer ${jwtToken}`
-            },
-            body: JSON.stringify(bookData)
-        });
-        const result = await response.json();
-        requestBooks.push(result);
-        renderBookRequests();
-    } catch (error) {
-        console.log('Error requesting book: ', error);
-    }
-
-}
-
 async function fetchBookRequest() {
     try {
         const response = await fetch('https://localhost:8443/api/books/requests', {
@@ -366,7 +351,9 @@ async function fetchBookRequest() {
                 Authorization: `Bearer ${jwtToken}`
             }
         });
-        requestBooks = await response.json();
+        const allBooks = await response.json();
+        requestBooks = allBooks.filter(book => book.status === 'REQUESTED');
+        console.log("Die angefragten Bücher: ", requestBooks);
         renderBookRequests();
     } catch (error) {
         console.log('Error fetching book requests:', error);
@@ -375,34 +362,17 @@ async function fetchBookRequest() {
 
 function renderBookRequests() {
     requestBooksList.innerHTML = "";
-    requestBooks.forEach(book => {
+    requestBooks.forEach(requestBook => {
         const li = document.createElement('li');
         li.innerHTML = `
-        ${book.title} by ${book.author} (ISBN: ${book.isbn})
-            <button onclick="handleBookRequest(${book.id}, 'accept')">Akzeotieren</button>
-            <button onclick="handleBookRequest(${book.id}, 'reject')">Ablehnen</button>
+        ${requestBook.title} by ${requestBook.author} (ISBN: ${requestBook.isbn})
+            <div>
+                <button onclick="acceptBookRequest(${requestBook.id})">Akzeotieren</button>
+                <button onclick="rejectBookRequest(${requestBook.id})">Ablehnen</button>
+            </div>
         `;
         requestBooksList.appendChild(li);
     });
-}
-
-async function handleBookRequest(id, action) {
-    try {
-        const response = await fetch(`https://localhost:8443/api/books/request/${id}?action=${action}`, {
-            method: 'PUT',
-            headers: {
-                Authorization: `Bearer ${jwtToken}`
-            }
-        });
-        const updatedBook = await response.json();
-        if (action === 'accept') {
-            books.push(updatedBook);
-            renderBooks();
-        }
-        requestBooks = requestBooks.filter(book => book.id !== id);
-    } catch (error) {
-        console.error('Error handling book request:', error);
-    }
 }
 
 async function submitBookRequest(e) {
@@ -411,12 +381,101 @@ async function submitBookRequest(e) {
         title: document.getElementById('requestTitle').value,
         author: document.getElementById('requestAuthor').value,
         isbn: document.getElementById('requestIsbn').value,
-        description: document.getElementById('requestReason').value
+        status: 'REQUESTED'
     };
-    await requestBook(bookData);
-    console.log(bookData);
-    resetRequestForm();
-    await fetchBookRequest();
+
+    try {
+        await requestBook(bookData);
+        resetRequestForm();
+        await fetchBookRequest();
+
+    } catch (error) {
+        console.log("Fehler beim Speichern des Buches: ", error);
+    }
+}
+
+async function requestBook(bookData) {
+
+    await fetch('https://localhost:8443/api/books/request', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${jwtToken}`
+        },
+        body: JSON.stringify(bookData)
+    });
+    console.log('Sending book data:', JSON.stringify(bookData));
+}
+
+// async function requestBook(bookData) {
+//     try {
+//         const response = await fetch('https://localhost:8443/api/books/request', {
+//             method: 'POST',
+//             headers: {
+//                 'Content-Type': 'application/json',
+//                 Authorization: `Bearer ${jwtToken}`
+//             },
+//             body: JSON.stringify(bookData)
+//         });
+//         const result = await response.json();
+//         console.log(result);
+//         requestBooks.push(result);
+//         renderBookRequests();
+//     } catch (error) {
+//         console.log('Error requesting book: ', error);
+//     }
+// }
+
+// async function handleBookRequest(id, action) {
+//     try {
+//         const response = await fetch(`https://localhost:8443/api/books/request/${id}?action=${action}`, {
+//             method: 'PUT',
+//             headers: {
+//                 Authorization: `Bearer ${jwtToken}`
+//             }
+//         });
+//         const updatedBook = await response.json();
+//         if (action === 'accept') {
+//             books.push(updatedBook);
+//             renderBooks();
+//         }
+//         requestBooks = requestBooks.filter(book => book.id !== id);
+//     } catch (error) {
+//         console.error('Error handling book request:', error);
+//     }
+// }
+
+async function acceptBookRequest(id) {
+    try {
+        const response = await fetch(`https://localhost:8443/api/books/request/${id}?action=accept`, {
+            method: 'PUT',
+            headers: {
+                Authorization: `Bearer ${jwtToken}`
+            }
+        });
+        if (response.ok) {
+            const acceptedBook = await response.json();
+            // Entferne das Buch aus der requestBooks-Liste
+            requestBooks = requestBooks.filter(book => book.id !== id);
+            // Füge das akzeptierte Buch zur books-Liste hinzu
+            books.push(acceptedBook);
+            // Aktualisiere die Anzeige
+            renderBookRequests();
+            renderBooks();
+        } else {
+            console.error('Failed to accept book request');
+        }
+    } catch (error) {
+        console.error('Error accepting book request:', error);
+    }
+}
+
+async function rejectBookRequest(id) {
+    try {
+
+    } catch (error) {
+        console.log("Fehler beim Löschen des Buches: ", error);
+    }
 }
 
 function resetRequestForm() {

@@ -1,5 +1,6 @@
 package schwarz.it.lws.bookmanager.controller;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -28,6 +29,7 @@ public class BookController {
     @PostMapping
     @PreAuthorize("hasRole('admin')")
     public Book createBook(@RequestBody Book book) {
+        //book.setStatus(Book.BookStatus.AVAILABLE);
         return bookRepository.save(book);
     }
 
@@ -47,6 +49,7 @@ public class BookController {
                     book.setTitle(bookDetails.getTitle());
                     book.setAuthor(bookDetails.getAuthor());
                     book.setIsbn(bookDetails.getIsbn());
+                    //book.setStatus(bookDetails.getStatus());
                     return ResponseEntity.ok(bookRepository.save(book));
                 })
                 .orElse(ResponseEntity.notFound().build());
@@ -65,11 +68,24 @@ public class BookController {
 
     //REQUEST
 
+//    @PostMapping("/request")
+//    @PreAuthorize("hasAnyRole('user', 'admin')")
+//    public Book requestBook(@RequestBody Book book) {
+//        book.setStatus(Book.BookStatus.REQUESTED);
+//        return bookRepository.save(book);
+//    }
+
     @PostMapping("/request")
     @PreAuthorize("hasAnyRole('user', 'admin')")
-    public Book requestBook(@RequestBody Book book) {
-        book.setStatus(Book.BookStatus.REQUESTED);
-        return bookRepository.save(book);
+    public ResponseEntity<?> requestBook(@RequestBody Book book) {
+        try {
+            book.setStatus(Book.BookStatus.REQUESTED);
+            Book savedBook = bookRepository.save(book);
+            return ResponseEntity.ok(savedBook);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error saving book: " + e.getMessage());
+        }
     }
 
     @GetMapping("/requests")

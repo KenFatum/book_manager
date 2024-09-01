@@ -42,10 +42,11 @@
         <h2>Anfrage für neue Bücher</h2>
         <form id="requestContainer">
             <input type="hidden" id="requestBookId">
+            <input type="hidden" id="requestBookStatus">
             <input type="text" id="requestTitle" placeholder="Titel" required>
             <input type="text" id="requestAuthor" placeholder="Autor" required>
             <input type="text" id="requestIsbn" placeholder="ISBN" required>
-            <textarea id="requestReason" maxlength="500" placeholder="Grund für die Anfrage"></textarea>
+<!--            <textarea id="requestReason" maxlength="500" placeholder="Grund für die Anfrage"></textarea>-->
             <button type="submit">Senden</button>
         </form>
     </section>
@@ -59,6 +60,7 @@
         <h2>Buch hinzufügen/bearbeiten</h2>
         <form id="addEditBookForm">
             <input type="hidden" id="bookId">
+            <input type="hidden" id="bookStatus">
             <input type="text" id="title" placeholder="Titel" required>
             <input type="text" id="author" placeholder="Autor" required>
             <input type="text" id="isbn" placeholder="ISBN" required>
@@ -69,8 +71,6 @@
     
 </main>
 
-
-<!--<script src="https://cdn.jsdelivr.net/npm/keycloak-js@25.0.4/dist/keycloak.min.js"></script>-->
 <script src="/keycloak.min.js"></script>
 <script src="app.js"></script>
 </body>
