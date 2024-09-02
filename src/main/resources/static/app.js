@@ -18,7 +18,6 @@ const displayUsername = document.getElementById("displayUsername");
 const optionForm = document.getElementById("optionForm");
 const editBtn = document.getElementById("editBtn");
 const readBtn = document.getElementById("readBtn");
-const orderListBtn = document.getElementById("orderListBtn");
 const booksRequestBtn = document.getElementById("booksRequestBtn");
 const editRequestBtn = document.getElementById("editRequestBtn");
 
@@ -131,7 +130,6 @@ setInterval(() => {
 function setAdminPermissions() {
     editBtn.style.display = "inline";
     readBtn.style.display = "inline";
-    orderListBtn.style.display = "inline";
     booksRequestBtn.style.display = "inline";
     editRequestBtn.style.display = "inline";
     bookForm.style.display = "none";
@@ -140,7 +138,6 @@ function setAdminPermissions() {
 function setUserPermissions() {
     editBtn.style.display = "none";
     readBtn.style.display = "inline";
-    orderListBtn.style.display = "none";
     booksRequestBtn.style.display = "inline";
     editRequestBtn.style.display = "none";
     bookList.innerHTML = "";
@@ -193,10 +190,8 @@ async function fetchBooks() {
                 Authorization: `Bearer ${jwtToken}`,
             },
         });
-        //const allBooks = await response.json();
-        //console.log(allBooks);
-        //books = allBooks.filter(book => book.status === 'AVAILABLE');
-        books = await response.json();
+        const allBooks = await response.json();
+        books = allBooks.filter(book => book.status === 'ACCEPTED');
         console.log("Verfügbare Bücher: ", books);
         renderBooks();
         toggleBookList(true);
@@ -271,7 +266,7 @@ async function handleBookSubmit(e) {
         title: document.getElementById("title").value,
         author: document.getElementById("author").value,
         isbn: document.getElementById("isbn").value,
-        //status: "AVAILABLE",
+        status: "ACCEPTED",
     };
     const bookId = document.getElementById("bookId").value;
 
@@ -314,7 +309,7 @@ function editBook(id) {
     const book = books.find((b) => b.id === id);
     if (book) {
         document.getElementById("bookId").value = book.id;
-        //document.getElementById("bookStatus").value = "AVAILABLE";
+        document.getElementById("bookStatus").value = "ACCEPTED";
         document.getElementById("title").value = book.title;
         document.getElementById("author").value = book.author;
         document.getElementById("isbn").value = book.isbn;
@@ -352,7 +347,7 @@ async function fetchBookRequest() {
             }
         });
         const allBooks = await response.json();
-        requestBooks = allBooks.filter(book => book.status === 'REQUESTED');
+        requestBooks = allBooks.filter(book => book.status === 'PENDING');
         console.log("Die angefragten Bücher: ", requestBooks);
         renderBookRequests();
     } catch (error) {
@@ -367,7 +362,7 @@ function renderBookRequests() {
         li.innerHTML = `
         ${requestBook.title} by ${requestBook.author} (ISBN: ${requestBook.isbn})
             <div>
-                <button onclick="acceptBookRequest(${requestBook.id})">Akzeotieren</button>
+                <button onclick="acceptBookRequest(${requestBook.id})">Akzeptieren</button>
                 <button onclick="rejectBookRequest(${requestBook.id})">Ablehnen</button>
             </div>
         `;
@@ -381,7 +376,7 @@ async function submitBookRequest(e) {
         title: document.getElementById('requestTitle').value,
         author: document.getElementById('requestAuthor').value,
         isbn: document.getElementById('requestIsbn').value,
-        status: 'REQUESTED'
+        status: 'PENDING'
     };
 
     try {
@@ -407,44 +402,6 @@ async function requestBook(bookData) {
     console.log('Sending book data:', JSON.stringify(bookData));
 }
 
-// async function requestBook(bookData) {
-//     try {
-//         const response = await fetch('https://localhost:8443/api/books/request', {
-//             method: 'POST',
-//             headers: {
-//                 'Content-Type': 'application/json',
-//                 Authorization: `Bearer ${jwtToken}`
-//             },
-//             body: JSON.stringify(bookData)
-//         });
-//         const result = await response.json();
-//         console.log(result);
-//         requestBooks.push(result);
-//         renderBookRequests();
-//     } catch (error) {
-//         console.log('Error requesting book: ', error);
-//     }
-// }
-
-// async function handleBookRequest(id, action) {
-//     try {
-//         const response = await fetch(`https://localhost:8443/api/books/request/${id}?action=${action}`, {
-//             method: 'PUT',
-//             headers: {
-//                 Authorization: `Bearer ${jwtToken}`
-//             }
-//         });
-//         const updatedBook = await response.json();
-//         if (action === 'accept') {
-//             books.push(updatedBook);
-//             renderBooks();
-//         }
-//         requestBooks = requestBooks.filter(book => book.id !== id);
-//     } catch (error) {
-//         console.error('Error handling book request:', error);
-//     }
-// }
-
 async function acceptBookRequest(id) {
     try {
         const response = await fetch(`https://localhost:8443/api/books/request/${id}?action=accept`, {
@@ -453,18 +410,8 @@ async function acceptBookRequest(id) {
                 Authorization: `Bearer ${jwtToken}`
             }
         });
-        if (response.ok) {
-            const acceptedBook = await response.json();
-            // Entferne das Buch aus der requestBooks-Liste
-            requestBooks = requestBooks.filter(book => book.id !== id);
-            // Füge das akzeptierte Buch zur books-Liste hinzu
-            books.push(acceptedBook);
-            // Aktualisiere die Anzeige
-            renderBookRequests();
-            renderBooks();
-        } else {
-            console.error('Failed to accept book request');
-        }
+        await fetchBookRequest();  // Diese Funktion sollte aktualisiert werden, um beide Listen zu aktualisieren
+
     } catch (error) {
         console.error('Error accepting book request:', error);
     }
@@ -472,9 +419,16 @@ async function acceptBookRequest(id) {
 
 async function rejectBookRequest(id) {
     try {
+            await fetch(`https://localhost:8443/api/books/request/${id}?action=reject`, {
+                method: 'PUT',
+                headers: {
+                    Authorization: `Bearer ${jwtToken}`
+            }
+        });
+        await fetchBookRequest();  // Diese Funktion sollte aktualisiert werden, um beide Listen zu aktualisieren
 
     } catch (error) {
-        console.log("Fehler beim Löschen des Buches: ", error);
+        console.error('Error rejecting book request:', error);
     }
 }
 

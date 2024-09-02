@@ -1,111 +1,62 @@
 package schwarz.it.lws.bookmanager.controller;
 
-import org.springframework.http.HttpStatus;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import schwarz.it.lws.bookmanager.model.Book;
-import org.springframework.security.access.prepost.PreAuthorize;
-import schwarz.it.lws.bookmanager.repository.BookRepository;
+import schwarz.it.lws.bookmanager.model.BookStatus;
+import schwarz.it.lws.bookmanager.service.BookService;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/books")
+@RequiredArgsConstructor
 public class BookController {
-    private final BookRepository bookRepository;
+    private final BookService bookService;
 
-    public BookController(BookRepository bookRepository) {
-        this.bookRepository = bookRepository;
-    }
-
-    @GetMapping
+    @GetMapping("/accepted")
     @PreAuthorize("hasAnyRole('user', 'admin')")
-    public List<Book> getAllBooks() {
-        return bookRepository.findAll();
+    public ResponseEntity<List<Book>> getBooksByStatusAccepted() {
+        return ResponseEntity.ok(bookService.findByStatus(BookStatus.ACCEPTED));
     }
 
-    @PostMapping
+    @GetMapping("/pending")
     @PreAuthorize("hasRole('admin')")
-    public Book createBook(@RequestBody Book book) {
-        //book.setStatus(Book.BookStatus.AVAILABLE);
-        return bookRepository.save(book);
+    public ResponseEntity<List<Book>> getBooksByStatusPending() {
+        return ResponseEntity.ok(bookService.findByStatus(BookStatus.PENDING));
     }
 
-    @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('user', 'admin')")
-    public ResponseEntity<Book> getBookById(@PathVariable Long id) {
-        return bookRepository.findById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    @PostMapping("/accepted")
+    @PreAuthorize("hasRole('admin')")
+    public ResponseEntity<Book> createBookWithStatusAccepted(@RequestBody Book book) {
+        return ResponseEntity.ok(bookService.createBookWithStatus(book, BookStatus.ACCEPTED));
+    }
+
+    @PostMapping("/pending")
+    @PreAuthorize("hasAnyRole('admin', 'user')")
+    public ResponseEntity<Book> createBookWithStatusPending(@RequestBody Book book) {
+        return ResponseEntity.ok(bookService.createBookWithStatus(book, BookStatus.PENDING));
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('admin')")
-    public ResponseEntity<Book> updateBook(@PathVariable Long id, @RequestBody Book bookDetails) {
-        return bookRepository.findById(id)
-                .map(book -> {
-                    book.setTitle(bookDetails.getTitle());
-                    book.setAuthor(bookDetails.getAuthor());
-                    book.setIsbn(bookDetails.getIsbn());
-                    //book.setStatus(bookDetails.getStatus());
-                    return ResponseEntity.ok(bookRepository.save(book));
-                })
-                .orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<Book> updateBook(@PathVariable Long id, @RequestBody Book book) {
+        return ResponseEntity.ok(bookService.updateBook(id, book));
     }
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('admin')")
-    public ResponseEntity<?> deleteBook(@PathVariable Long id) {
-        return bookRepository.findById(id)
-                .map(book -> {
-                    bookRepository.delete(book);
-                    return ResponseEntity.ok().build();
-                })
-                .orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<Void> deleteBook(@PathVariable Long id) {
+        bookService.deleteBook(id);
+        return ResponseEntity.ok().build();
     }
 
-    //REQUEST
 
-//    @PostMapping("/request")
-//    @PreAuthorize("hasAnyRole('user', 'admin')")
-//    public Book requestBook(@RequestBody Book book) {
-//        book.setStatus(Book.BookStatus.REQUESTED);
-//        return bookRepository.save(book);
-//    }
-
-    @PostMapping("/request")
-    @PreAuthorize("hasAnyRole('user', 'admin')")
-    public ResponseEntity<?> requestBook(@RequestBody Book book) {
-        try {
-            book.setStatus(Book.BookStatus.REQUESTED);
-            Book savedBook = bookRepository.save(book);
-            return ResponseEntity.ok(savedBook);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Error saving book: " + e.getMessage());
-        }
-    }
-
-    @GetMapping("/requests")
+    @PatchMapping("/{id}")
     @PreAuthorize("hasRole('admin')")
-    public List<Book> getBookRequests() {
-        return bookRepository.findByStatus(Book.BookStatus.REQUESTED);
-    }
-
-    @PutMapping("/request/{id}")
-    @PreAuthorize("hasRole('admin')")
-    public ResponseEntity<Book> processBookRequest(@PathVariable Long id, @RequestParam String action) {
-        return bookRepository.findById(id)
-                .map(book -> {
-                    if ("accept".equals(action)) {
-                        book.setStatus(Book.BookStatus.ACCEPTED);
-                    } else if ("reject".equals(action)) {
-                        book.setStatus(Book.BookStatus.REJECTED);
-                    }
-                    return ResponseEntity.ok(bookRepository.save(book));
-                })
-                .orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<Book> processBookRequest(@PathVariable Long id) {
+        return ResponseEntity.ok(bookService.processBookRequest(id));
     }
 }

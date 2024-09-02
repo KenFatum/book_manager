@@ -11,7 +11,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "book")
 public class Book {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -21,10 +20,6 @@ public class Book {
     private String isbn;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "status")
     private BookStatus status;
-
-    public enum BookStatus {
-        AVAILABLE, REQUESTED, ACCEPTED, REJECTED
-    }
 }
+
