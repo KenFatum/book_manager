@@ -27,6 +27,18 @@
         </nav>
     </section>
 
+    <section id="bookForm" style="display:none;">
+        <h2>Buch hinzufügen/bearbeiten</h2>
+        <form id="addEditBookForm">
+            <input type="hidden" id="bookId">
+            <input type="hidden" id="bookStatus">
+            <input type="text" id="title" placeholder="Titel" required>
+            <input type="text" id="author" placeholder="Autor" required>
+            <input type="text" id="isbn" placeholder="ISBN" required>
+            <button type="submit">Speichern</button>
+        </form>
+    </section>
+
     <div class="search-container" style="display: none;">
         <input type="text" id="searchInput" placeholder="Suche nach Büchern...">
         <button id="searchButton">Suchen</button>
@@ -53,18 +65,6 @@
     <section id="bookList" style="display: none;">
         <h2>Bücherliste</h2>
         <ul id="books"></ul>
-    </section>
-
-    <section id="bookForm" style="display:none;">
-        <h2>Buch hinzufügen/bearbeiten</h2>
-        <form id="addEditBookForm">
-            <input type="hidden" id="bookId">
-            <input type="hidden" id="bookStatus">
-            <input type="text" id="title" placeholder="Titel" required>
-            <input type="text" id="author" placeholder="Autor" required>
-            <input type="text" id="isbn" placeholder="ISBN" required>
-            <button type="submit">Speichern</button>
-        </form>
     </section>
 
     

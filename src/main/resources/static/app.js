@@ -28,6 +28,7 @@ const requestContainer = document.getElementById("requestContainer");
 
 const editRequestForm = document.getElementById("editRequestForm");
 const requestBooksList = document.getElementById("editRequestBooks");
+const editBookBtn = document.getElementById("editBookBtn");
 
 const logoutOptions = {redirectUri: "https://127.0.0.1:8443/index.html"};
 
@@ -37,6 +38,10 @@ registerBtn.onclick = () => keycloak.register();
 addEditBookForm.addEventListener("submit", handleBookSubmit);
 searchButton.addEventListener("click", searchBook);
 requestContainer.addEventListener("submit", submitBookRequest);
+
+function getApiBaseUrl() {
+    return `${window.location.protocol}//${window.location.hostname}${window.location.port ? ':' + window.location.port : ''}`;
+}
 
 const updateButtons = (authenticated) => {
     loginBtn.style.display = authenticated ? "none" : "inline-block";
@@ -110,6 +115,7 @@ function showAdminDashBoard(userName) {
 function showUserDashboard(userName) {
     displayUsername.innerHTML = `Welcome, ${userName}`;
     setUserPermissions();
+    styleUserPermissions()
 }
 
 setInterval(() => {
@@ -144,7 +150,8 @@ function setUserPermissions() {
 }
 
 function styleUserPermissions() {
-    readBtn.style.borderRadius = ''
+    readBtn.style.borderRadius = '5px 0 0 5px';
+    booksRequestBtn.style.borderRadius = '0 5px 5px 0';
 }
 
 editBtn.onclick = () => {
@@ -253,8 +260,8 @@ function renderBooks() {
                  ${
             keycloak.hasRealmRole("admin")
                 ? `
-                     <button onclick="editBook(${book.id})">Bearbeiten</button>
-                     <button onclick="deleteBook(${book.id})">Löschen</button>
+                     <button id="editBookBtn" onclick="editBook(${book.id})">Bearbeiten</button>
+                     <button id="deleteBookBtn" onclick="deleteBook(${book.id})">Löschen</button>
                  `
                 : ""
         }
