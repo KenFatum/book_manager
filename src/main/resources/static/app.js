@@ -1,5 +1,4 @@
 // Globale Variablen
-let currentUser = null;
 let books = [];
 let requestBooks = [];
 let jwtToken = null;
@@ -69,6 +68,7 @@ window.onload = function () {
                 console.log("JWT Token:" + jwtToken);
                 showDashboard();
                 fetchBooks();
+                fetchBookRequest();
                 toggleBookList(true);
             }
         })
@@ -143,6 +143,10 @@ function setUserPermissions() {
     bookList.innerHTML = "";
 }
 
+function styleUserPermissions() {
+    readBtn.style.borderRadius = ''
+}
+
 editBtn.onclick = () => {
     if (bookForm.style.display === "none" || bookForm.style.display === "") {
         bookForm.style.display = "block";
@@ -185,7 +189,7 @@ async function fetchBooks() {
         return;
     }
     try {
-        const response = await fetch("https://localhost:8443/api/books", {
+        const response = await fetch("https://localhost:8443/api/books/accepted", {
             headers: {
                 Authorization: `Bearer ${jwtToken}`,
             },
@@ -284,7 +288,7 @@ async function handleBookSubmit(e) {
 }
 
 async function createBook(bookData) {
-    await fetch("https://localhost:8443/api/books", {
+    await fetch("https://localhost:8443/api/books/accepted", {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
@@ -341,7 +345,7 @@ function resetForm() {
 
 async function fetchBookRequest() {
     try {
-        const response = await fetch('https://localhost:8443/api/books/requests', {
+        const response = await fetch('https://localhost:8443/api/books/pending', {
             headers: {
                 Authorization: `Bearer ${jwtToken}`
             }
@@ -391,7 +395,7 @@ async function submitBookRequest(e) {
 
 async function requestBook(bookData) {
 
-    await fetch('https://localhost:8443/api/books/request', {
+    await fetch('https://localhost:8443/api/books/pending', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -404,14 +408,14 @@ async function requestBook(bookData) {
 
 async function acceptBookRequest(id) {
     try {
-        const response = await fetch(`https://localhost:8443/api/books/request/${id}?action=accept`, {
-            method: 'PUT',
+        await fetch(`https://localhost:8443/api/books/${id}`, {
+            method: 'PATCH',
             headers: {
                 Authorization: `Bearer ${jwtToken}`
             }
         });
         await fetchBookRequest();  // Diese Funktion sollte aktualisiert werden, um beide Listen zu aktualisieren
-
+        //await fetchBooks();
     } catch (error) {
         console.error('Error accepting book request:', error);
     }
@@ -419,10 +423,10 @@ async function acceptBookRequest(id) {
 
 async function rejectBookRequest(id) {
     try {
-            await fetch(`https://localhost:8443/api/books/request/${id}?action=reject`, {
-                method: 'PUT',
-                headers: {
-                    Authorization: `Bearer ${jwtToken}`
+        await fetch(`https://localhost:8443/api/books/${id}`, {
+            method: 'DELETE',
+            headers: {
+                Authorization: `Bearer ${jwtToken}`
             }
         });
         await fetchBookRequest();  // Diese Funktion sollte aktualisiert werden, um beide Listen zu aktualisieren

@@ -1,3 +1,15 @@
+:root {
+    /* Header-Farben */
+    --header-dark-brown: rgb(79, 55, 45);
+    --header-warm-beige: rgb(234, 224, 200);
+    --header-soft-gold: rgb(212, 175, 55);
+
+    /* Main-Farben */
+    --main-light-cream: rgb(252, 246, 235);
+    --main-soft-green: rgb(152, 190, 156);
+    --main-muted-blue: rgb(95, 133, 163);
+}
+
 body {
     font-family: Arial, sans-serif;
     line-height: 1.6;
@@ -5,22 +17,72 @@ body {
     padding: 0;
 }
 
+/*HEADER*/
+
 header {
-    background: #333;
-    color: #fff;
+    background: var(--header-dark-brown);
+    color: var(--header-warm-beige);
     padding: 1rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
 }
 
-nav button {
+#displayLoginRegisterBtn button {
     margin-left: 10px;
+    background-color: transparent;
+    border: 2px solid var(--header-soft-gold);
 }
+
+#displayLoginRegisterBtn button:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 3px 3px 5px rgba(0, 0, 0, 0.2);
+}
+
+#loginBtn {
+    border-radius: 5px 0 0 5px;
+}
+
+#registerBtn {
+    border-radius: 0 5px 5px 0;
+}
+
+#logoutBtn {
+    border-radius: 5px;
+}
+
+
+/*MAIN*/
 
 main {
     padding: 2rem;
 }
+
+#optionNav {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+}
+
+#optionNav button {
+    margin-left: 10px;
+    background-color: var(--header-dark-brown);
+    border: 2px solid var(--header-soft-gold);
+}
+
+#optionNav button:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 3px 3px 5px rgba(0, 0, 0, 0.2);
+}
+
+#editBtn {
+    border-radius: 5px 0 0 5px;
+}
+
+#editRequestBtn {
+    border-radius: 0 5px 5px 0;
+}
+
 
 .search-container {
     display: flex;
@@ -51,12 +113,6 @@ main {
 
 #searchButton:hover {
     background-color: #555;
-}
-
-#optionNav {
-    display: flex;
-    justify-content: space-around;
-    align-items: center;
 }
 
 #bookList, #bookForm {
@@ -115,4 +171,44 @@ li {
 
 #requestContainer button {
     margin-top: 10px;
+}
+
+@media only screen and (max-width: 730px) {
+    li {
+        display: flex;
+        flex-direction: column;
+    }
+
+    #bookList div {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+}
+
+@media only screen and (max-width: 515px) {
+    header {
+        display: flex;
+        flex-direction: column;
+    }
+}
+
+@media only screen and (max-width: 490px) {
+    #optionNav {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    nav #optionNav {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    main {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
 }
